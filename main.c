@@ -4,7 +4,16 @@
 
 int human = -1;
 int robot = 1;
+int empty = 0;
 int size = 9;
+
+int max(a, b) {
+  if (a > b) return a; else return b;
+}
+
+int min(a, b) {
+  if (a < b) return a; else return b;
+}
 
 // full(board) determines if all spaces on the board
 // are occupied and returns true, otherwise false
@@ -21,60 +30,82 @@ bool full(int board[9]) {
 // state in favor of the player specified
 bool win(int board[9], int player) {
   if ((board[0] == player &&
-   board[3] == player &&
-   board[6] == player) ||
-    (board[1] == player &&
-     board[4] == player &&
-     board[7] == player) ||
-    (board[2] == player &&
-     board[5] == player &&
-     board[8] == player) ||
-    (board[0] == player &&
-     board[1] == player &&
-     board[2] == player) ||
-    (board[3] == player &&
-     board[4] == player &&
-     board[5] == player) ||
-    (board[6] == player &&
-     board[7] == player &&
-     board[8] == player) ||
-    (board[0] == player &&
-     board[4] == player &&
-     board[8] == player) ||
-    (board[2] == player &&
-     board[4] == player &&
+       board[3] == player &&
+       board[6] == player) ||
+      (board[1] == player &&
+       board[4] == player &&
+       board[7] == player) ||
+      (board[2] == player &&
+       board[5] == player &&
+       board[8] == player) ||
+      (board[0] == player &&
+       board[1] == player &&
+       board[2] == player) ||
+      (board[3] == player &&
+       board[4] == player &&
+       board[5] == player) ||
+      (board[6] == player &&
+       board[7] == player &&
+       board[8] == player) ||
+      (board[0] == player &&
+       board[4] == player &&
+       board[8] == player) ||
+      (board[2] == player &&
+       board[4] == player &&
        board[6] == player)) { // 8 possible win combinations
     return true;
-} else {
-  return false;
-}
-}
-
-// score(board) determines the score of a particular state
-int score(int board[9]) {
-  if (win(board, robot)) {
-    return 10;
-  } else if (win(board, human)) {
-    return -10;
   } else {
-    return 0;
+    return false;
   }
 }
 
 // minimax(board, scoreboard, player) recursively updates
 // scoreboard
 // effects: mutates scoreboard
-void minimax(int board[9], int scoreboard[9], int player) {
-  int copyboard[9] = {0,1,2,3,4,5,6,7,8};
-  for (int i = 0; i < size; i++) {
-    copyboard[i] = board[i];
+int minimax(int board[9], int player) {
+  // if human wins
+  if (win(board, human)) {
+    return -10;
   }
-  for (int i = 0; i < size; i++) {
-    if (board[i] == 0) {
-      copyboard[i] = player;
-      scoreboard[i] = score(copyboard);
-      copyboard[i] = board[i];
+  // if robot wins
+  if (win(board, robot)) {
+    return 10;
+  }
+  // if no spaces left and no wins
+  if (full(board)) {
+    return 0;
+  }
+  // if player is robot, maximize score
+  if (player == robot) {
+    int bestscore = -100;
+    // traverse through the board
+    for (int i = 0; i < size; i++) {
+      // if there is an empty space
+      if (board[i] == empty) {
+        // try the space
+        board[i] = robot;
+        // recursively determine score at current space and aim to maximize
+        bestscore = max(bestscore, minimax(board, human));
+        // reset the board
+        board[i] = empty;
+      }
     }
+    return bestscore;
+  } else { // if player is human, minimize score
+    int  bestscore = 100;
+    // traverse through the board
+    for (int i = 0; i < size; i++) {
+      // if there is an empty space
+      if (board[i] == empty) {
+        // try the space
+        board[i] = human;
+        // recursively determine score at current space and aim to minimize
+        bestscore = min(bestscore, minimax(board, robot));
+        // reset the board
+        board[i] = empty;
+      }
+    }
+    return bestscore;
   }
 }
 
@@ -82,23 +113,29 @@ void minimax(int board[9], int scoreboard[9], int player) {
 // favorable for the robot
 // effects: mutates board
 //          mutates scoreboard
-void move(int board[9], int scoreboard[9]) {
-  int indsofar = -100;
-  int maxsofar = -100;
-  printf("Scoreboard\n");
-  for (int i = 0; i < size; i++) {
-    printf("%d ", scoreboard[i]);
-  }
-  for (int i = 0; i < size; i++) {
-    if (scoreboard[i] > maxsofar) {
-      maxsofar = scoreboard[i];
-      indsofar = i;
+void move(int board[9]) {
+  int index = -100;
+  int bestscore = -100;
+  // check that board is not full
+  if (!full(board)) {
+    // traverse
+    for (int i = 0; i < size; i++) {
+      // if space is empty
+      if (board[i] == empty) {
+        // pretend robot is on this tile
+        board[i] = robot;
+        // determine score
+        int score = minimax(board, human);
+        // done pretending
+        board[i] = empty;
+        // update bestscore and index
+        if (score > bestscore) {
+          index = i;
+          bestscore = score;
+        }
+      }
     }
-  }
-  printf("indsofar is: %d\n", indsofar);
-  board[indsofar] = robot;
-  for (int i = 0; i < size; i++) {
-    scoreboard[i] = -100;
+    board[index] = robot;
   }
 }
 
@@ -125,56 +162,39 @@ void print(int board[9]) {
 void update(int board[9]) {
   char c = getchar();
   getchar();
-  //int scan = scanf(" %c", &c);
   int ind = c - '0';
-  if (board[ind - 1] == 0) {
+  if (board[ind - 1] == empty) {
     board[ind - 1] = human;
   } else {
     printf("Invalid move! You lose your turn!\n");
   }
 }
 
-int loop(int board[9], int scoreboard[9]) {
-  //system("clear");
-  print(board);
-  printf("Type a number and press enter\n");
-  printf("Before update\n");
-  for (int i = 0; i < size; i++) {
-    printf("%d ", board[i]);
-  }
-  printf("\n");
-  update(board);
-  minimax(board, scoreboard, robot);
-  printf("Before move\n");
-  for (int i = 0; i < size; i++) {
-    printf("%d ", board[i]);
-  }
-  move(board, scoreboard);
-  printf("After move\n");
-  for (int i = 0; i < size; i++) {
-    printf("%d ", board[i]);
-  }
-  printf("\n");
-  //system("clear");
-  print(board);
-  if (win(board, human)) {
-    printf("You win!\n");
-    return 0;
-  } else if (win(board, robot)) {
-    printf("You lose!\n");
-    return 0;
-  } else if (full(board)) {
-    printf("Tie!\n");
-    return 0;
-  } else {
-    printf("Keep going!\n");
-    loop(board, scoreboard);
-    return 0;
+void game(int board[9]) {
+  while (1) {
+    system("clear");
+    print(board);
+    printf("Type a number and press enter.\n");
+    update(board);
+    move(board);
+    system("clear");
+    print(board);
+    if (win(board, human)) {
+      printf("You win!\n");
+      break;
+    } else if (win(board, robot)) {
+      printf("You lose!\n");
+      break;
+    } else if (full(board)) {
+      printf("Tie!\n");
+      break;
+    } else {
+      printf("Keep going!\n");
+    }
   }
 }
 
 int main(void) {
-  int ogboard[9] = {1,0,0,0,-1,0,0,0,0};
-  int sboard[9] = {-100,-100,-100,-100,-100,-100,-100,-100,-100};
-  loop(ogboard, sboard);
+  int ogboard[9] = {0,0,0,0,0,0,0,0,0};
+  game(ogboard);
 }
