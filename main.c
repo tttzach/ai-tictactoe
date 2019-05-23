@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 int human = -1;
 int robot = 1;
@@ -20,33 +21,33 @@ bool full(int board[9]) {
 // state in favor of the player specified
 bool win(int board[9], int player) {
   if ((board[0] == player &&
-       board[3] == player &&
-       board[6] == player) ||
-      (board[1] == player &&
-       board[4] == player &&
-       board[7] == player) ||
-      (board[2] == player &&
-       board[5] == player &&
-       board[8] == player) ||
-      (board[0] == player &&
-       board[1] == player &&
-       board[2] == player) ||
-      (board[3] == player &&
-       board[4] == player &&
-       board[5] == player) ||
-      (board[6] == player &&
-       board[7] == player &&
-       board[8] == player) ||
-      (board[0] == player &&
-       board[4] == player &&
-       board[8] == player) ||
-      (board[2] == player &&
-       board[4] == player &&
+   board[3] == player &&
+   board[6] == player) ||
+    (board[1] == player &&
+     board[4] == player &&
+     board[7] == player) ||
+    (board[2] == player &&
+     board[5] == player &&
+     board[8] == player) ||
+    (board[0] == player &&
+     board[1] == player &&
+     board[2] == player) ||
+    (board[3] == player &&
+     board[4] == player &&
+     board[5] == player) ||
+    (board[6] == player &&
+     board[7] == player &&
+     board[8] == player) ||
+    (board[0] == player &&
+     board[4] == player &&
+     board[8] == player) ||
+    (board[2] == player &&
+     board[4] == player &&
        board[6] == player)) { // 8 possible win combinations
     return true;
-  } else {
-    return false;
-  }
+} else {
+  return false;
+}
 }
 
 // score(board) determines the score of a particular state
@@ -72,7 +73,7 @@ void minimax(int board[9], int scoreboard[9], int player) {
     if (board[i] == 0) {
       copyboard[i] = player;
       scoreboard[i] = score(copyboard);
-      copyboard[i] = 0;
+      copyboard[i] = board[i];
     }
   }
 }
@@ -84,15 +85,20 @@ void minimax(int board[9], int scoreboard[9], int player) {
 void move(int board[9], int scoreboard[9]) {
   int indsofar = -100;
   int maxsofar = -100;
+  printf("Scoreboard\n");
+  for (int i = 0; i < size; i++) {
+    printf("%d ", scoreboard[i]);
+  }
   for (int i = 0; i < size; i++) {
     if (scoreboard[i] > maxsofar) {
       maxsofar = scoreboard[i];
       indsofar = i;
     }
   }
+  printf("indsofar is: %d\n", indsofar);
   board[indsofar] = robot;
   for (int i = 0; i < size; i++) {
-    scoreboard[i] = 0;
+    scoreboard[i] = -100;
   }
 }
 
@@ -104,7 +110,7 @@ void print(int board[9]) {
     } else if (board[i] == robot) {
       printf("\u2573");
     } else {
-      printf("\u3000");
+      printf("%d", i + 1);
     }
     if (column == 2) {
       printf("\n");
@@ -116,19 +122,59 @@ void print(int board[9]) {
   }
 }
 
-int main(void) {
-  int ogboard[9] = {-1,0,1,1,0,0,1,-1,-1};
-  int sboard[9] = {0};
-  print(ogboard);
-  minimax(ogboard, sboard, robot);
-  move(ogboard, sboard);
-  if (win(ogboard, human)) {
+void update(int board[9]) {
+  char c = getchar();
+  getchar();
+  //int scan = scanf(" %c", &c);
+  int ind = c - '0';
+  if (board[ind - 1] == 0) {
+    board[ind - 1] = human;
+  } else {
+    printf("Invalid move! You lose your turn!\n");
+  }
+}
+
+int loop(int board[9], int scoreboard[9]) {
+  //system("clear");
+  print(board);
+  printf("Type a number and press enter\n");
+  printf("Before update\n");
+  for (int i = 0; i < size; i++) {
+    printf("%d ", board[i]);
+  }
+  printf("\n");
+  update(board);
+  minimax(board, scoreboard, robot);
+  printf("Before move\n");
+  for (int i = 0; i < size; i++) {
+    printf("%d ", board[i]);
+  }
+  move(board, scoreboard);
+  printf("After move\n");
+  for (int i = 0; i < size; i++) {
+    printf("%d ", board[i]);
+  }
+  printf("\n");
+  //system("clear");
+  print(board);
+  if (win(board, human)) {
     printf("You win!\n");
-  } else if (win(ogboard, robot)) {
+    return 0;
+  } else if (win(board, robot)) {
     printf("You lose!\n");
-  } else if (full(ogboard)) {
+    return 0;
+  } else if (full(board)) {
     printf("Tie!\n");
+    return 0;
   } else {
     printf("Keep going!\n");
+    loop(board, scoreboard);
+    return 0;
   }
+}
+
+int main(void) {
+  int ogboard[9] = {1,0,0,0,-1,0,0,0,0};
+  int sboard[9] = {-100,-100,-100,-100,-100,-100,-100,-100,-100};
+  loop(ogboard, sboard);
 }
