@@ -7,10 +7,12 @@ int robot = 1;
 int empty = 0;
 int size = 9;
 
+// max(a, b) returns the bigger number
 int max(a, b) {
   if (a > b) return a; else return b;
 }
 
+// min(a, b) returns the smaller number
 int min(a, b) {
   if (a < b) return a; else return b;
 }
@@ -139,6 +141,7 @@ void move(int board[9]) {
   }
 }
 
+// print(board) logs the board to the console
 void print(int board[9]) {
   printf("\n\n\n\n\n\n                                  TIC TAC TOE\n\n\n");
   int column = 0;
@@ -166,6 +169,8 @@ void print(int board[9]) {
   printf("\n\n");
 }
 
+// update(board) updates the board with user's input
+// effects: mutates board
 void update(int board[9]) {
   char c = getchar();
   getchar();
@@ -175,6 +180,7 @@ void update(int board[9]) {
   }
 }
 
+// restart() restarts the game if input is Y
 bool restart(void) {
   char c = getchar();
   getchar();
@@ -185,6 +191,7 @@ bool restart(void) {
   }
 }
 
+// game(board) consists of the graphical user interface which prompts the user
 void game(int board[9]) {
   while (1) {
     int count = 0;
